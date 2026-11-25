@@ -5,8 +5,10 @@ import io
 import os
 import sys
 import tempfile
+import threading
 import unittest
 import urllib.parse
+from collections import OrderedDict
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -22,6 +24,7 @@ import experimental
 import imagery
 import ltdtm
 import netfetch
+import revisit
 
 KEY = (14, 9279, 5190)
 
@@ -56,6 +59,29 @@ class TerrainTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
 
+    def test_healthy_terrain_does_not_poison_plans_or_reload_ancestors(self):
+        d = dem.Dem.__new__(dem.Dem)
+        d.ltdtm, d.disk, d.ltdtm_served = ltdtm.Terrain(self.tmp.name, Fetcher()), cache.NONE, set()
+        d._local, d._lock = threading.local(), threading.RLock()
+        d._lru, d._lru_short, d.mem_tiles = OrderedDict(), {}, 8
+        d._count = mock.Mock()
+        # Exercise the real fault-marking and ancestor-cache paths. A healthy raster
+        # must not make every road/bridge plan incomplete or be reloaded per child.
+        d._make_tile = lambda key: d._lithuania(key, np.full((512, 512), 8., np.float32))
+        d._mirror_get = mock.Mock(return_value=None)
+        d._mirror_claim = mock.Mock(return_value=True)
+        d._mirror_path = lambda key: os.path.join(self.tmp.name, 'decoded')
+        d._mirror_put = mock.Mock()
+        with mock.patch.object(d, '_load_marked', wraps=d._load_marked) as load:
+            with revisit.scope() as build:
+                a = d._from_ancestor(KEY[0]+1, KEY[1]*2, KEY[2]*2, KEY[0])
+                b = d._from_ancestor(KEY[0]+1, KEY[1]*2+1, KEY[2]*2, KEY[0])
+            self.assertTrue(build.complete, 'valid Lithuanian terrain must not fault dependent world plans')
+            self.assertEqual(load.call_count, 1, 'siblings must reuse a healthy cached ancestor')
+        self.assertIn(KEY, d._lru)
+        d._mirror_put.assert_not_called()
+        self.assertTrue(np.isfinite(a).all() and np.isfinite(b).all())
+
     def test_plane_and_parent_seams(self):
         net = Fetcher()
         terrain = ltdtm.Terrain(self.tmp.name, net)
@@ -78,6 +104,7 @@ class TerrainTest(unittest.TestCase):
         terrain = ltdtm.Terrain(self.tmp.name, Fetcher(nodata=True))
         d = dem.Dem.__new__(dem.Dem)
         d.ltdtm, d.disk, d.ltdtm_served = terrain, cache.NONE, set()
+        d._local = threading.local()
         d._partial, d._count = mock.Mock(), mock.Mock()
         a = np.full((512, 512), 8., np.float32)
         got = d._lithuania(KEY, a)
@@ -91,12 +118,12 @@ class TerrainTest(unittest.TestCase):
         terrain = ltdtm.Terrain(self.tmp.name, net)
         d = dem.Dem.__new__(dem.Dem)
         d.ltdtm, d.disk = terrain, cache.NONE
-        d._partial = mock.Mock()
+        d._local = threading.local()
         a = np.ones((512, 512), np.float32)
-        with mock.patch.object(dem.revisit, 'fault') as fault:
+        with revisit.scope() as build:
             self.assertIs(d._lithuania(KEY, a), a)
             self.assertIs(d._lithuania(KEY, a), a)
-            self.assertGreaterEqual(fault.call_count, 2)  # FetchError itself may also mark a fault
+        self.assertFalse(build.complete, 'an outage must still fault dependent world plans')
         self.assertEqual(len(net.calls), 1, 'an outage is cooled down, not repeatedly fetched')
         self.assertFalse(list(Path(self.tmp.name).rglob('*.tif')))
 

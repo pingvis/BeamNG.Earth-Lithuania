@@ -1,5 +1,17 @@
 # Lithuanian buildings and ordinary road signs
 
+## Terrain streaming fix (`lithuania.dev.2`)
+
+The first dev build incorrectly called `Dem._partial()` even after a successful Lithuanian terrain
+read. That helper also reports a source failure to the world-plan cache. Valid terrain was therefore
+treated as a temporary fallback: ancestors were repeatedly loaded instead of reused, and dependent
+road/bridge plans could not be retained as complete. Trees queued behind those road jobs also lagged.
+The fix separates skipping the decoded DEM mirror from reporting a failed source. Only a real
+terrain fetch/decode failure now faults the dependent plans. A regression test exercises the real
+DEM load, fault propagation and sibling-ancestor reuse; outage fallback remains marked incomplete.
+The in-game disappearance was reported in Kaunas when enabling the terrain option and reversed
+when disabling it. The corrected executable still needs the same in-game comparison.
+
 Implemented in the Lithuania fork, November 2026. These changes reuse the existing procedural
 building meshes, stock building materials and the project's own Vienna sign atlas. No national
 model download, extra service, account or native rebuild is needed. Game appearance remains

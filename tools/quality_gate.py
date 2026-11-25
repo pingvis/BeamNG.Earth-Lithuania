@@ -24,6 +24,7 @@ MODULES = (
     "test_sketchfab_assets", "test_subsea_tunnels", "test_tunnels",
     "test_host_package", "test_carriageway_solver",
     "test_portugal_imagery",
+    "test_ltdtm",
     "test_rail_crossing_assets",
     "test_native_stress",
     "test_bridge_level_spans",

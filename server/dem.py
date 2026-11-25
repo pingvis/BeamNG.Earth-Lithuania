@@ -514,15 +514,17 @@ class Dem:
         terrain = getattr(self, "ltdtm", None)
         if terrain is None or not ltdtmmod.covers(*key):
             return a
-        # Raw online rasters have their own bounded cache and expiry. Do not
-        # hide them under a decoded mirror made before a refresh or outage.
-        self._partial()
+        # Raw rasters have their own cache/expiry; skip the decoded mirror only.
+        # _partial() also faults every dependent world plan and marks the DEM LRU
+        # entry short. Doing that on success repeatedly rebuilt ancestors and kept
+        # roads/bridges (and the trees behind them) waiting on incomplete plans.
+        self._local.partial = True
         terrain.disk = self.disk
         try:
             h, ok = terrain.tile(*key)
         except (netfetch.FetchError, OSError, ValueError) as e:
             log.debug("Lithuanian terrain %s: %s", key, e)
-            revisit.fault()             # a temporary fallback is not a reusable world plan
+            self._partial()             # a temporary fallback is not a reusable world plan
             return a
         out = self._blend(key, a, np.where(ok, h, a), ok)
         if out is not a:
