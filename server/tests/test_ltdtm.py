@@ -125,7 +125,7 @@ class TerrainTest(unittest.TestCase):
         source = imagery.SOURCES['lithuania']
         self.assertIn('layers=show:8', source.url, 'no survey-date overlay')
         self.assertTrue(source.lazy)
-        self.assertLess(imagery.DEFAULT_CHAIN.index('lithuania'), imagery.DEFAULT_CHAIN.index('eox2023'))
+        self.assertLess(imagery.DEFAULT_CHAIN.index('lithuania'), imagery.DEFAULT_CHAIN.index('poland'))
         self.assertEqual(experimental.env_for({'expLithuaniaTerrain': True}), {'BNE_LT_TERRAIN': '1'})
         self.assertEqual(experimental.env_for({}), {})
         self.assertIn('5 m', credits.label('dem:ltdtm'))
