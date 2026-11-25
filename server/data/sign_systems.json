@@ -5,6 +5,10 @@
                 "octagon": [0.6, 0.75, 0.9], "diamond": [0.6, 0.75, 0.9], "rect": [0.8, 1.0, 1.2]}
   },
   "countries": {
+    "LT": {"atlas": "vienna_w", "lateral": [0.5, 1.0], "mount": [2.2, 1.5], "gap_m": [10, 20], "max_on_pole": 3,
+           "only": ["prio.give_way", "prio.stop", "reg.no_entry", "mand.roundabout", "warn.roundabout", "warn.signals",
+                    "info.crossing_right", "info.oneway", "info.parking", "info.bus_stop", "info.living_street", "info.living_street_end"],
+           "order": ["priority", "warning", "prohibition", "mandatory", "information"]},
     "NL": {"atlas": "vienna_w", "lateral": [0.5, 1.5], "mount": [2.2, 1.5], "gap_m": [10, 20], "max_on_pole": 2,
            "only": ["prio.give_way", "prio.stop", "reg.no_entry", "mand.roundabout"],
            "order": ["priority", "mandatory"]},

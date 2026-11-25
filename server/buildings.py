@@ -14,12 +14,14 @@ its windows a whole number of bays along every wall (no window cut at a corner).
 footprints and a ground-height function; no game state.
 """
 from runtimeprofiler import step as profile_step
+from functools import lru_cache
 import os
 import math
 
 import numpy as np
 
 import fast
+import countrybounds
 import dmath
 import dnp
 import landmarks
@@ -76,6 +78,7 @@ FACADE_TINTS = ("bne_bld_fac_white", "bne_bld_fac_cream", "bne_bld_fac_sand", "b
 # the plastered blocks' colours by region (FACADE_TINTS elsewhere): the Mediterranean's warm ochres, oranges and pinks
 # (Rome's Trastevere against Mapillary, 2026-11-10: ours were white / cream / sand / grey), Latin America's brighter
 REGION_FACADE_TINTS = {
+    "lithuania": ("bne_bld_fac_white", "bne_bld_fac_cream", "bne_bld_fac_grey", "bne_bld_fac_yellow"),
     "mediterranean": ("bne_bld_fac_cream", "bne_bld_fac_sand", "bne_bld_fac_ochre", "bne_bld_fac_terracotta",
                       "bne_bld_fac_salmon", "bne_bld_fac_yellow", "bne_bld_fac_white", "bne_bld_fac_ochre"),
     "latin_america": ("bne_bld_fac_white", "bne_bld_fac_cream", "bne_bld_fac_ochre", "bne_bld_fac_terracotta",
@@ -851,6 +854,11 @@ _COURSES = (ROOF_SLATE_DARK, (0, 1, 2))
 _SHAKES = (ROOF_WOOD, (0, 1, 2, 3))
 _DARK = (ROOF_SLATE, (7, 8, 9))
 STYLES = {
+    # Fallback palette, not surveyed shares: plaster, brick and timber, with metal or tiled roofs.
+    # Explicit mapped materials, roof shapes and dimensions still take precedence.
+    "lithuania": Style("lithuania", 0.25, ((STUCCO, 0.5), (SIDING, 0.25)), 0.0, 0.08, 0.3,
+                       (_DARK, (ROOF_METAL, (0, 1, 4)), _CLAY), pitch=35.0,
+                       paint=0.15, attached=0.6),
     "us_east": Style("us_east", 0.75, ((SIDING, 0.75),), 0.55, 0.0, 0.4, _US_ROOFS, barn_red=0.5),
     "us_south": Style("us_south", 0.35, ((SIDING, 0.75),), 0.55, 0.0, 0.4, _US_ROOFS, barn_red=0.5),
     "us_plains": Style("us_plains", 0.15, ((SIDING, 0.75),), 0.55, 0.0, 0.4, _US_ROOFS, barn_red=0.5),
@@ -887,10 +895,20 @@ STYLES = {
 }
 
 
+@lru_cache(maxsize=4096)
+def _style_country(index, lat, lon):
+    # A tile plans many buildings at the same coordinates. Key by index too so a newly
+    # available border file replaces a previously absent lookup without stale results.
+    return index.at(lat, lon)
+
+
 def region_style(lat, lon):
     """The Style of the region around (lat, lon) (None: the US East's)."""
     if lat is None or lon is None:
         return STYLES["us_east"]
+    if 53.89 <= lat <= 56.45 and 20.90 <= lon <= 26.85:
+        if _style_country(countrybounds.bundled(), lat, lon) == "LT":
+            return STYLES["lithuania"]
     if 24.0 <= lat <= 72.0 and -170.0 <= lon <= -52.0:          # North America (and Canada)
         if lon < -100.0:
             return STYLES["us_west"]

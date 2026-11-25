@@ -3,6 +3,14 @@
   "generic": {"stop": "prio.stop", "give_way": "prio.give_way", "yield": "prio.give_way", "no_entry": "reg.no_entry"},
   "ignored": ["city_limit", "maxspeed", "none", "yes", "no", "unknown"],
   "countries": {
+    "LT": {
+      "codes": {"111": "warn.roundabout", "112": "warn.signals", "201": "prio.main_road", "202": "prio.main_road_end",
+                "203": "prio.give_way", "204": "prio.stop", "205": "prio.oncoming", "206": "prio.over_oncoming",
+                "301": "reg.no_entry", "410": "mand.roundabout", "503": "info.oneway", "528": "info.parking",
+                "534": "info.crossing_right", "548": "info.bus_stop", "552": "info.living_street", "553": "info.living_street_end"},
+      "verified": ["111", "112", "201", "202", "203", "204", "205", "206", "301", "410", "503", "528", "534", "548", "552", "553"],
+      "plates": "^8\\d\\d$"
+    },
     "DE": {
       "codes": {"205": "prio.give_way", "206": "prio.stop", "208": "prio.oncoming", "306": "prio.main_road", "307": "prio.main_road_end",
                 "267": "reg.no_entry", "250": "reg.no_vehicles", "276": "reg.no_overtaking", "280": "reg.no_overtaking_end",

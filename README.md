@@ -9,6 +9,13 @@ were checked with regression tests and live source fetches around Kaunas, Vilniu
 See [SOURCES.md](SOURCES.md) for details. Upstream's release links below contain upstream builds;
 they do not include these fork changes. Run from this source tree or build the app to use them.
 
+The fork also adds a Lithuanian procedural building palette and a first set of ordinary road signs
+(stop, give-way, no-entry, crossings, roundabouts, signals, one-way streets, parking, bus stops and
+residential zones). Buildings use the palette automatically where the downloaded country borders
+identify Lithuania. For signs, enable **Road signs** in Settings > Experimental and restart the app.
+These reuse existing assets; they are approximations, not surveyed sign positions or landmark models.
+See [the implementation notes](docs/research/lithuania-scenery.md) for coverage and limitations.
+
 The original project's documentation follows.
 
 A 1:1 scale, streamed Earth for [BeamNG.drive](https://www.beamng.com/): drive anywhere on the

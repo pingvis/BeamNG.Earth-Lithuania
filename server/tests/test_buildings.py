@@ -51,6 +51,38 @@ class RegionStyleTest(unittest.TestCase):
             out.append(bld.plan(ring, {"class": "house"}, lat=lat, lon=lon))
         return out
 
+    def test_lithuania_cities_and_border_fallback(self):
+        index = mock.Mock()
+        with mock.patch.object(bld.countrybounds, "bundled", return_value=index):
+            index.at.return_value = "LT"
+            for lat, lon in [(54.8985, 23.9036), (54.6872, 25.2797), (55.9349, 23.3137)]:
+                self.assertEqual(bld.region_style(lat, lon).name, "lithuania")
+            # The bounding box also contains neighbouring countries; borders decide.
+            for country in ("LV", "PL", "BY", "RU", None):
+                bld._style_country.cache_clear()
+                index.at.return_value = country
+                self.assertEqual(bld.region_style(55.9, 26.5).name, "europe_north")
+            self.assertEqual(bld.region_style(56.5, 23.7).name, "nordic")
+
+    def test_lithuania_models_and_mapped_attributes(self):
+        index = mock.Mock()
+        index.at.return_value = "LT"
+        with mock.patch.object(bld.countrybounds, "bundled", return_value=index):
+            hs = self.houses(54.8985, 23.9036, n=100)
+            self.assertFalse(any(h.porch for h in hs))
+            self.assertTrue(all(h.pitch == 35.0 for h in hs))
+            self.assertTrue(any(h.roof_mat.startswith(bld.ROOF_METAL) for h in hs))
+            attrs = {"class": "house", "height": 12.0, "roof_shape": "flat", "facade_material": "stone"}
+            a = bld.plan(rect(0, 0, 10, 12), attrs, lat=54.8985, lon=23.9036)
+            other = bld.plan(rect(0, 0, 10, 12), attrs, lat=52.37, lon=4.90)
+            self.assertEqual(a.height, other.height)
+            self.assertEqual(a.roof, "flat")
+            self.assertEqual(a.facade, other.facade)
+            self.assertTrue(str(a.facade).startswith(bld.STONE))
+            again = self.houses(54.8985, 23.9036, n=100)
+            self.assertEqual([(h.wall, h.roof, h.roof_mat) for h in hs],
+                             [(h.wall, h.roof, h.roof_mat) for h in again])
+
     def test_regions(self):
         self.assertEqual(bld.region_style(39.29, -76.61).name, "us_east")
         self.assertEqual(bld.region_style(37.36, -118.39).name, "us_west")

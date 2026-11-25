@@ -10,6 +10,16 @@ import signcodes  # noqa: E402
 
 
 class Parse(unittest.TestCase):
+    def test_lithuanian_numbers_and_supplementary_plates(self):
+        self.assertEqual(signcodes.roles("LT:203;LT:204;LT:301"),
+                         ["prio.give_way", "prio.stop", "reg.no_entry"])
+        self.assertEqual(signcodes.roles("548", "LT"), ["info.bus_stop"])
+        self.assertEqual(signcodes.roles("LT:534;LT:410;LT:528"),
+                         ["info.crossing_right", "mand.roundabout", "info.parking"])
+        self.assertEqual(signcodes.parse("LT:203,801")[0]["plates"], ["801"])
+        for unknown in ("LT:999", "LT:533", "LT:611", "LT:1111"):
+            self.assertEqual(signcodes.roles(unknown), [])
+
     def test_values_from_the_wild(self):
         # (value, country of the place, roles) from Overpass round Berlin, Krakow and Prague, 2026-11-07
         for value, country, want in [

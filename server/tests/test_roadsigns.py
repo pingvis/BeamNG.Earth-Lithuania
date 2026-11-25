@@ -16,6 +16,16 @@ TOOLS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "to
 
 
 class Tables(unittest.TestCase):
+    def test_lithuania_reviewed_roles_only(self):
+        row = roadsigns.system("LT")
+        self.assertEqual(row["atlas"], "vienna_w")
+        rules = roadsigns.tables()[1]["rules"]
+        signs = np.zeros((len(rules), 11))
+        signs[:, 4] = np.arange(len(rules))
+        kept = roadsigns.supported(signs, row)
+        self.assertEqual({rules[int(i)] for i in kept[:, 4]}, set(row["only"]))
+        self.assertNotIn("info.motorway", row["only"], "Lithuanian motorway signs need green artwork")
+
     def test_every_role_fits_the_sheet_once(self):
         roles, _, by_id = roadsigns.tables()
         self.assertEqual(len(by_id), len(roles["roles"]))
@@ -278,6 +288,37 @@ class Switch(unittest.TestCase):
 
 
 class Mesh(unittest.TestCase):
+    def test_lithuanian_profile_builds_a_native_mesh(self):
+        import fast
+        rules = roadsigns.tables()[1]["rules"]
+        rows = np.zeros((len(rules), 11))
+        for i in range(len(rules)):
+            rows[i] = (10 + i * 5, 20, 1, 0, i, 0, 10 + i * 5, 18, 1, i, 0)
+
+        class Frame:
+            def enu_to_geodetic(self, x, y, z):
+                return np.asarray(y), np.asarray(x), z
+
+            def geodetic_to_enu(self, lat, lon, h):
+                return np.asarray(lon), np.asarray(lat), np.asarray(h)
+
+        with patch.object(roadsigns, "place", return_value=rows):
+            p, t, uv, materials, mi = roadsigns.build_tile(
+                None, Frame(), 0, 0, lambda lat, lon: np.zeros_like(lat), None, country="LT")
+        self.assertTrue(np.isfinite(p).all())
+        self.assertTrue(np.isfinite(uv).all())
+        self.assertGreater(len(t), 0)
+        self.assertLess(t.max(), len(p))
+        self.assertEqual(materials, ["bne_signs_vienna_w", "bne_exit_metal"])
+        self.assertEqual(set(mi.tolist()), {0, 1})
+        roles, _, by_id = roadsigns.tables()
+        expected = {by_id[r][0] for r in roadsigns.system("LT")["only"]}
+        # One face centroid per atlas cell; no unreviewed motorway/warning artwork.
+        centroids = uv[t[mi == 0]].mean(axis=1)
+        cells = (np.floor(centroids[:, 0] * roles["cols"]).astype(int)
+                 + np.floor((1 - centroids[:, 1]) * roles["rows"]).astype(int) * roles["cols"])
+        self.assertEqual(set(cells), expected)
+
     def test_dutch_pilot_batches_the_four_roles_in_one_tile_mesh(self):
         import fast
         if not hasattr(fast._ef, "road_sign_mesh"):
