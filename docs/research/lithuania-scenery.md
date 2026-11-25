@@ -1,5 +1,19 @@
 # Lithuanian buildings and ordinary road signs
 
+## Terrain cache performance (`lithuania.dev.3`)
+
+Successful Lithuanian terrain can now use the existing bounded decoded DEM disk cache shared
+between workers and launches. Previously every worker recomputed the global fallback and regional
+blend even when another worker had already produced the same result. A decoded tile is rejected
+when its raw source is missing, expired (30 days), or newer than the decoded result. Raw rasters
+held in memory likewise check for expiry or replacement. Failed fetches remain temporary fallbacks.
+Cached reads retain the Lithuanian terrain credit.
+
+A local 40-read microbenchmark with a real cached Lithuanian raster and a synthetic flat global
+base measured median decoded loads of 10.879 ms before and 1.193 ms after (about 9x faster).
+This excludes network downloads and road generation and is not an FPS or total loading-time claim.
+First visits still need downloads and full road planning; existing cached visits benefit most.
+
 ## Terrain streaming fix (`lithuania.dev.2`)
 
 The first dev build incorrectly called `Dem._partial()` even after a successful Lithuanian terrain

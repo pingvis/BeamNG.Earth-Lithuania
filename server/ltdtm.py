@@ -79,6 +79,18 @@ class Terrain:
         self._mem, self._failed = OrderedDict(), OrderedDict()
         self._lock = threading.Lock()
 
+    def source_stamp(self, key):
+        """Fresh source raster's timestamp, or None; no fetch. Gates decoded DEM reuse."""
+        z, x, y = key
+        az = min(z, MAX_ZOOM)
+        scale = 2 ** (z - az)
+        path = os.path.join(self.root, str(az), str(x // scale), str(y // scale)) + '.tif'
+        try:
+            stamp = os.path.getmtime(path)
+            return stamp if time.time() - stamp <= MAX_AGE_S else None
+        except OSError:
+            return None
+
     def _read(self, path):
         try:
             if time.time() - os.path.getmtime(path) > MAX_AGE_S:
@@ -95,8 +107,11 @@ class Terrain:
         # host limiter and xproc lock also coordinate the server's other workers.
         with self._lock:
             if key in self._mem:
-                self._mem.move_to_end(key)
-                return self._mem[key]
+                a, stamp = self._mem[key]
+                if stamp is not None and stamp == self.source_stamp(key):
+                    self._mem.move_to_end(key)
+                    return a
+                del self._mem[key]
             if time.monotonic() < self._failed.get(key, 0):
                 raise ValueError("Lithuanian terrain source is cooling down")
             path = os.path.join(self.root, *(str(v) for v in key)) + ".tif"
@@ -117,7 +132,7 @@ class Terrain:
                         if os.path.exists(tmp):
                             os.remove(tmp)
                     self._trim()
-                self._mem[key] = a
+                self._mem[key] = (a, self.source_stamp(key))
                 while len(self._mem) > MEM_TILES:
                     self._mem.popitem(last=False)
                 self._failed.pop(key, None)

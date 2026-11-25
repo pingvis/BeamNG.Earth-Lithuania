@@ -514,11 +514,9 @@ class Dem:
         terrain = getattr(self, "ltdtm", None)
         if terrain is None or not ltdtmmod.covers(*key):
             return a
-        # Raw rasters have their own cache/expiry; skip the decoded mirror only.
-        # _partial() also faults every dependent world plan and marks the DEM LRU
-        # entry short. Doing that on success repeatedly rebuilt ancestors and kept
-        # roads/bridges (and the trees behind them) waiting on incomplete plans.
-        self._local.partial = True
+        # Successful reads may use the decoded mirror. _mirror_get checks the raw
+        # source's freshness/revision, so workers can share decoded results without
+        # retaining an expired raster. Only an actual outage makes plans partial.
         terrain.disk = self.disk
         try:
             h, ok = terrain.tile(*key)
@@ -1169,8 +1167,14 @@ class Dem:
             return None
         path = self._mirror_path(key)
         try:
-            if time.time() - os.path.getmtime(path) > MIRROR_MAX_AGE_S:
+            written = os.path.getmtime(path)
+            if time.time() - written > MIRROR_MAX_AGE_S:
                 return None
+            lt = getattr(self, 'ltdtm', None)
+            if lt is not None and ltdtmmod.covers(*key):
+                stamp = lt.source_stamp(key)
+                if stamp is None or written < stamp:
+                    return None
             if MIRROR_ZSTD:             # (packed: this process's own array, not a shared mapping)
                 with open(path, "rb") as fh:
                     a = fast._ef.f32_unpack(fh.read()).reshape(TILE, TILE)
@@ -1182,6 +1186,8 @@ class Dem:
             return None
         if not readback:
             self._count("dem:mirror")
+            if lt is not None and ltdtmmod.covers(*key):
+                self.ltdtm_served.add(key)
         return a
 
     def _mirror_put(self, key, a):

@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.parse
 from collections import OrderedDict
@@ -34,6 +35,9 @@ def height(e, n):
 
 
 class Fetcher:
+    def register_chain(self, *args):
+        pass
+
     def __init__(self, nodata=False, fail=False):
         self.calls, self.nodata, self.fail = [], nodata, fail
 
@@ -67,11 +71,12 @@ class TerrainTest(unittest.TestCase):
         d._count = mock.Mock()
         # Exercise the real fault-marking and ancestor-cache paths. A healthy raster
         # must not make every road/bridge plan incomplete or be reloaded per child.
+        d.served = {KEY: dem.MAPTERHORN['name']}
         d._make_tile = lambda key: d._lithuania(key, np.full((512, 512), 8., np.float32))
         d._mirror_get = mock.Mock(return_value=None)
         d._mirror_claim = mock.Mock(return_value=True)
         d._mirror_path = lambda key: os.path.join(self.tmp.name, 'decoded')
-        d._mirror_put = mock.Mock()
+        d._mirror_put = mock.Mock(side_effect=lambda key, a: a)
         with mock.patch.object(d, '_load_marked', wraps=d._load_marked) as load:
             with revisit.scope() as build:
                 a = d._from_ancestor(KEY[0]+1, KEY[1]*2, KEY[2]*2, KEY[0])
@@ -79,8 +84,45 @@ class TerrainTest(unittest.TestCase):
             self.assertTrue(build.complete, 'valid Lithuanian terrain must not fault dependent world plans')
             self.assertEqual(load.call_count, 1, 'siblings must reuse a healthy cached ancestor')
         self.assertIn(KEY, d._lru)
-        d._mirror_put.assert_not_called()
+        d._mirror_put.assert_called_once()
         self.assertTrue(np.isfinite(a).all() and np.isfinite(b).all())
+
+    def test_decoded_terrain_shared_between_workers_and_expires_with_source(self):
+        net = Fetcher()
+
+        def worker():
+            d = dem.Dem(self.tmp.name, fetcher=net)
+            d.ltdtm = ltdtm.Terrain(os.path.join(self.tmp.name, 'ltdtm'), net)
+            def base(key):
+                d.served[key] = dem.MAPTERHORN['name']
+                return np.full((512, 512), 8., np.float32)
+            d._make_tile0 = mock.Mock(side_effect=base)
+            return d
+
+        a = worker()
+        first = a._load_tile(KEY).copy()
+        self.assertEqual(len(net.calls), 1)
+        b = worker()
+        with mock.patch.object(b, '_make_tile', side_effect=AssertionError('decoded tile should be reused')):
+            second = b._load_tile(KEY).copy()
+        np.testing.assert_array_equal(first, second)
+        self.assertIn(KEY, b.ltdtm_served, 'cached terrain retains Lithuanian attribution')
+        source = Path(a.ltdtm.root) / str(KEY[0]) / str(KEY[1]) / f'{KEY[2]}.tif'
+        # A source refresh invalidates the older decoded tile, even while its own TTL is fresh.
+        stamp = time.time() + 2
+        os.utime(source, (stamp, stamp))
+        self.assertIsNone(b._mirror_get(KEY))
+        # An expired source also prevents decoded reuse, and a fresh worker fetches it again.
+        old = time.time() - ltdtm.MAX_AGE_S - 1
+        os.utime(source, (old, old))
+        a.ltdtm.tile(*KEY)
+        self.assertEqual(len(net.calls), 2, 'the original worker also refreshes its in-memory raster')
+        c = worker()
+        self.assertIsNone(c._mirror_get(KEY))
+        c._load_tile(KEY)
+        self.assertEqual(len(net.calls), 2)
+        # Packed mirrors own their arrays; .npy mirrors can map files on Windows.
+        del a, b, c
 
     def test_plane_and_parent_seams(self):
         net = Fetcher()
