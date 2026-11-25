@@ -9,7 +9,6 @@ the global terrain. Cache: at most 64 MiB of raw rasters under dem/ltdtm/v1.
 """
 import io
 import logging
-import math
 import os
 import threading
 import time
@@ -20,6 +19,7 @@ import numpy as np
 from PIL import Image
 
 import cache as cachemod
+import dmath
 import netfetch
 import staging
 import xproc
@@ -45,8 +45,8 @@ def covers(z, x, y):
         return False
     n = 2 ** z
     west, east = x / n * 360 - 180, (x + 1) / n * 360 - 180
-    north = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / n))))
-    south = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / n))))
+    north = dmath.degrees(dmath.atan(dmath.sinh(dmath.pi * (1 - 2 * y / n))))
+    south = dmath.degrees(dmath.atan(dmath.sinh(dmath.pi * (1 - 2 * (y + 1) / n))))
     return west < BOUNDS[3] and east > BOUNDS[1] and south < BOUNDS[2] and north > BOUNDS[0]
 
 
