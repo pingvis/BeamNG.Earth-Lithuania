@@ -49,6 +49,7 @@ import dmath
 import dnp
 import hkdtm as hkdtmmod
 import hklidar
+import ltdtm as ltdtmmod
 import hrdem as hrdemmod
 import lidarbc as lidarbcmod
 import netfetch
@@ -324,6 +325,8 @@ class Dem:
         self.hkdtm = (hkdtmmod.HkDtm(hklidar.at(os.path.dirname(cache_dir), self.fetcher)) if hkdtmmod.ON
                       else None)
         self.hkdtm_served = set()       # tile keys with Hong Kong's LiDAR heights in them
+        self.ltdtm = ltdtmmod.Terrain(os.path.join(cache_dir, "ltdtm"), self.fetcher) if ltdtmmod.ON else None
+        self.ltdtm_served = set()
         self._mem_raw = OrderedDict()   # (src name, z, x, y) -> bytes not written to disk (MEM_RAW_BYTES)
         self._mem_raw_bytes = 0
         self._mem_miss = OrderedDict()  # (src name, z, x, y) -> 404s not written to disk (MEM_MISSES)
@@ -518,6 +521,26 @@ class Dem:
             self._count("hkdtm:tile")
             with self._lock:
                 self.hkdtm_served.add(key)
+        return out
+
+    def _lithuania(self, key, a):
+        terrain = getattr(self, "ltdtm", None)
+        if terrain is None or not ltdtmmod.covers(*key):
+            return a
+        # Raw online rasters have their own bounded cache and expiry. Do not
+        # hide them under a decoded mirror made before a refresh or outage.
+        self._partial()
+        terrain.disk = self.disk
+        try:
+            h, ok = terrain.tile(*key)
+        except (netfetch.FetchError, OSError, ValueError) as e:
+            log.debug("Lithuanian terrain %s: %s", key, e)
+            revisit.fault()             # a temporary fallback is not a reusable world plan
+            return a
+        out = self._blend(key, a, np.where(ok, h, a), ok)
+        if out is not a:
+            self.ltdtm_served.add(key)
+            self._count("ltdtm:tile")
         return out
 
     def _blend(self, key, a, h, ok):
@@ -1149,6 +1172,7 @@ class Dem:
         # its bias, BNE_HRDEM_NEAR's whole HRDEM. Their tiles apart: off, the mirror's tiles as before)
         hk += ("b" if getattr(self, "lidarbc", None) is not None else "") + \
             ("n" if getattr(self, "hrdem_near", HRDEM_NEAR) else "")
+        hk += "l" if getattr(self, "ltdtm", None) is not None and ltdtmmod.covers(z, x, y) else ""
         return os.path.join(self.cache_dir, "decoded", f"v{DECODED_VERSION}", f"g{int(self.ground_filter)}{hk}", str(z),
                             str(x), f"{y}{'.f32z' if MIRROR_ZSTD else '.npy'}")
 
@@ -1307,7 +1331,7 @@ class Dem:
         return None
 
     def _make_tile(self, key):
-        return self._hongkong(key, self._canada(key, self._make_tile0(key)))
+        return self._lithuania(key, self._hongkong(key, self._canada(key, self._make_tile0(key))))
 
     def _make_tile0(self, key):
         z, x, y = key

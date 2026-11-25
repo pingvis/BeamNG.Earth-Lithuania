@@ -152,6 +152,7 @@ M.SCHEMA = {
   expRailCurves = { kind = 'bool', default = false, label = 'Rounded railway curves' },
   expWatertight = { kind = 'bool', default = false, label = 'Closed 3D models' },
   expCanadaLidar = { kind = 'bool', default = false, label = 'Detailed Canadian lidar' },
+  expLithuaniaTerrain = { kind = 'bool', default = false, label = 'Lithuanian terrain from Geoportal' },
   expStaleRevisit = { kind = 'bool', default = false, label = 'Show the older world while rebuilding' },
   -- in Germany: the German right-of-way signs and markings at junctions, 30-zone signs and traffic that gives way
   -- accordingly (server designs.py; the message german_junctions)
@@ -220,7 +221,7 @@ M.ORDER = { 'quality', 'terrainDetail', 'lodPx', 'groundPhoto', 'groundGrid', 't
   'expNlRoadSigns', 'expEuScenery', 'expDropRails', 'expEntranceFlares', 'expPriorityStops', 'expRoadBumps', 'expRoughDirt',
   'expWearStrips', 'expGradeGuard', 'expPhotoSurface', 'expTerrainBumps', 'expCliffWalls', 'expTunnelLids', 'expSubseaTunnels',
   'expAiTunnels', 'expRailCollide', 'expCatenary', 'expRailCrossings', 'expRailTunnels', 'expRailCurves', 'expWatertight',
-  'expCanadaLidar', 'expStaleRevisit' }
+  'expCanadaLidar', 'expLithuaniaTerrain', 'expStaleRevisit' }
 
 -- Stored but not on the settings page
 M.HIDDEN = { welcomeSeen = true, updateDismissed = true, devNoticeSeen = true, qualityDetected = true, telemetryChoice = true }

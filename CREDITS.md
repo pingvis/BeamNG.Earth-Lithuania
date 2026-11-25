@@ -10,6 +10,20 @@ Status: **in use** = used by the current main branch; **branch** = on a feature 
 yet; **planned** = in the roadmap, not used yet; **reference** = consulted for research or tuning
 only, nothing redistributed. Licence notes marked *(verify)* must be re-checked before any release.
 
+## Lithuanian online sources
+
+- ORT10LT recent orthophotography (2022–2026), streamed from Geoportal's public map-image service.
+  **ORT10LT © Nacionalinė žemės tarnyba prie Aplinkos ministerijos, 2022–2026; SSVA / geoportal.lt.**
+  [Service metadata](https://www.geoportal.lt/metadata-catalog/catalog/search/resource/details.page?uuid=%7BB631BA2D-32E0-40EC-818A-A992CDF62F9A%7D).
+- GDR50LT 5 m terrain GRID (2017), streamed as floating-point rasters; experimental and off by default.
+  **GDR50LT © Nacionalinė žemės tarnyba prie Aplinkos ministerijos, 2017; GIS-Centras / geoportal.lt.**
+  [Dataset metadata](https://www.geoportal.lt/metadata-catalog/catalog/search/resource/details.page?uuid=%7B2E27F72B-1510-401D-812F-CC9F70E87813%7D).
+- General state spatial data reuse: **CC BY 4.0**, with the national attribution requirements in the
+  [2026 rules, paragraphs 20–22](https://www.e-tar.lt/portal/lt/legalAct/92507406b70d11f1baf5938282b7b257).
+  Images and terrain are reprojected/resampled and may be colour adjusted or blended: **data changed**.
+  No national survey archive is bundled. These online services are cached and rate limited; their availability
+  is independent of the mod. The terrain service is an older model, not a claim of lidar-quality accuracy.
+
 ## Regional furniture experiment (bundled, opt-in)
 
 - `server/data/country_bounds.zip`: worldwide territorial countries/dependencies,

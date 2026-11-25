@@ -1,4 +1,15 @@
-# BeamNG.Earth
+# BeamNG.Earth-Lithuania
+
+A Lithuania-focused fork of [TecnaGamer/BeamNG.Earth](https://github.com/TecnaGamer/BeamNG.Earth).
+It adds streamed ORT10LT aerial imagery and optional streamed GDR50LT 5 m terrain, with no account,
+bulk survey download, or data hosting required. Enable **Lithuanian terrain from Geoportal** under
+Settings > Experimental and restart BeamNG.Earth to try the terrain; imagery is used automatically.
+The terrain model is older and experimental, and has not yet been verified in game. These additions
+were checked with regression tests and live source fetches around Kaunas, Vilnius and Šiauliai.
+See [SOURCES.md](SOURCES.md) for details. Upstream's release links below contain upstream builds;
+they do not include these fork changes. Run from this source tree or build the app to use them.
+
+The original project's documentation follows.
 
 A 1:1 scale, streamed Earth for [BeamNG.drive](https://www.beamng.com/): drive anywhere on the
 planet on real elevation data and satellite imagery, with distance-based level of detail and the
@@ -31,6 +42,9 @@ You can help support development by reporting [issues](https://github.com/TecnaG
   at the North Pole, the polar day and night of the real sky, and a minimap compass that points to true north.
 - Opt-in (Settings > Experimental > Road surface from aerial photos, or `BNE_PHOTO_SURFACE=1`): an untagged track, service or unclassified road is asphalt, grass or gravel by the
   colour of the regional photo under it (a lane as green as its verges is a grass lane, a pale neutral one gravel).
+- Lithuania: streamed ORT10LT aerial photos from Geoportal, with no account or bulk download. Settings > Experimental >
+  Lithuanian terrain from Geoportal (`BNE_LT_TERRAIN=1`, after a restart) also streams the older 5 m GDR50LT terrain
+  model, with a 64 MiB download cache. Height alignment is still experimental; the global terrain remains the fallback.
 - Ground materials from land cover (grass, dirt, rock, sand, snow, mud, lawns, paved squares and parking
   lots) with 3D grass and bushes. Squares and pedestrian areas are painted into the ground with their own textures by
   their mapped surface and paving tags (grey stone slabs, red herringbone brick, cobbles; in the US red brick only

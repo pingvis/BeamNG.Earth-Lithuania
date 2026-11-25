@@ -391,6 +391,12 @@ def _regional_policies():
 
 
 POLICIES.update(_regional_policies())
+# Lithuanian imagery and experimental terrain share this public host. Keep one
+# request in flight and fail back promptly rather than hold the physics ground
+# behind an unavailable export service. This is a conservative client budget,
+# not a claim about a published national-service quota.
+POLICIES["www.geoportal.lt"] = replace(POLICIES["www.geoportal.lt"], burst=2.0,
+                                      connect_timeout=3.0, timeout=12.0, max_wait=5.0, max_attempts=1)
 # swisstopo's WMTS (SWISSIMAGE, the "swiss" photos): the FSDI's General Terms of Use (geo.admin.ch/en/general-terms-of-use-
 # fsdi, §2.3's table, read 2026-11-13) allow wmts.geo.admin.ch 1'200 requests / minute (20/s; 631 M a year in all;
 # doubled on 2025-01-01, geo.admin.ch/en/change-limits-fair-use) as fair use, and desktop applications are fair use. The

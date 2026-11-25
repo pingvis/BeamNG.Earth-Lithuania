@@ -4,6 +4,19 @@ BeamNG.Earth builds the world around you from open data that the BeamNG.Earth se
 on your PC) downloads as you drive. This page explains what each source does, when it is used, and what you see if
 it does not answer. Licences and the exact attribution each one asks for are in [CREDITS.md](CREDITS.md).
 
+Lithuania: ORT10LT aerial imagery is streamed from Geoportal's public image service
+([www.geoportal.lt](https://www.geoportal.lt)) and cached as you explore.
+Only the photograph layer is requested, without its survey-date overlay; missing areas use the usual global
+imagery fallback. No account or national download is needed. The service's mosaic combines different capture years.
+
+Settings > Experimental > **Lithuanian terrain from Geoportal** enables a separate online elevation source
+after restarting BeamNG.Earth (`BNE_LT_TERRAIN=1` for a source launch). This is the older **GDR50LT 5 m terrain
+model**, not the newer lidar surveys. Its shapes and height alignment still need in-game comparison, so it is off
+by default. Small floating-point rasters are downloaded only for the area requested, reused across finer tiles,
+and kept in a 64 MiB cache inside `dem/ltdtm/`. The source supplies distant and nearby terrain; missing data and
+service failures retain the global model. The imagery and elevation share a conservative host rate limit.
+You do not need to process point clouds, store the whole country, or host data.
+
 A few things hold for all of them:
 
 - **Your PC talks to them directly.** There is no BeamNG.Earth middleman server. Requests carry only what the source

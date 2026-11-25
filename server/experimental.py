@@ -44,6 +44,7 @@ FEATURES = (
     ("expRailCurves", {"BNE_RAIL_CURVES": "on"}, None),                   # roadsmooth.RAIL_ON
     ("expWatertight", {"BNE_WATERTIGHT": "on"}, None),                    # shells.ON
     ("expCanadaLidar", {"BNE_LIDARBC": "1", "BNE_HRDEM_NEAR": "1"}, None),     # dem.LIDARBC / HRDEM_NEAR
+    ("expLithuaniaTerrain", {"BNE_LT_TERRAIN": "1"}, None),                 # ltdtm: streamed 5 m terrain
     ("expStaleRevisit", {"BNE_STALE_REVISIT": "on"}, None),               # revisit.STALE_ON (not a key: NOT_SWITCHES)
 )
 IDS = tuple(f[0] for f in FEATURES)

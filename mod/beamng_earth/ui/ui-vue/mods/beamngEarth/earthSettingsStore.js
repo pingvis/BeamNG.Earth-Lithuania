@@ -127,6 +127,8 @@ export const settingsSchema = [
         note: RESTART_NOTE },
       { id: "expWatertight", type: "bool", default: false, name: "Closed 3D models", desc: "Experimental. Every road, bridge and building piece is built as a closed solid (sides, ends and a sunk bottom), so a piece slightly out of place shows no see-through hole. Up to about a third more triangles to draw.",
         note: RESTART_NOTE },
+      { id: "expLithuaniaTerrain", type: "bool", default: false, name: "Lithuanian terrain from Geoportal", desc: "Experimental. Streams small tiles of Lithuania's older 5 m terrain model. May improve ground shapes; height alignment is not yet verified. Keeps up to 64 MB of downloaded terrain.",
+        note: RESTART_NOTE },
       { id: "expCanadaLidar", type: "bool", default: false, name: "Detailed Canadian lidar", desc: "Experimental. In Canada, the national lidar terrain (HRDEM) at full detail near you, and British Columbia's own 1 m lidar where it was flown. Sharper ground, but many more downloads: first visits there take much longer.",
         note: RESTART_NOTE },
       { id: "expStaleRevisit", type: "bool", default: false, name: "Show the older world while rebuilding", desc: "Experimental. After an update, places you visited before show the previous version's roads, trees, signs and ground photos while the new version builds them, instead of loading as a first visit.",

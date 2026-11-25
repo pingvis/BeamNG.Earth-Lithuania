@@ -27,7 +27,7 @@ PLACE = {
     "swiss": "Switzerland", "france": "France", "pt_dgt2021": "Portugal", "pt_dgt2018": "Portugal",
     "spain": "Spain", "netherlands": "the Netherlands",
     "luxembourg": "Luxembourg", "austria": "Austria", "it_bolzano": "South Tyrol", "it_pcn": "Italy",
-    "poland": "Poland", "czechia": "Czechia", "estonia": "Estonia", "flanders": "Flanders (Belgium)",
+    "poland": "Poland", "lithuania": "Lithuania", "czechia": "Czechia", "estonia": "Estonia", "flanders": "Flanders (Belgium)",
     "de_bayern": "Bavaria", "de_nrw": "North Rhine-Westphalia", "de_bw": "Baden-Wurttemberg",
     "de_nds": "Lower Saxony", "de_berlin": "Berlin", "de_hessen": "Hesse", "japan": "Japan",
     "hongkong": "Hong Kong",
@@ -98,6 +98,11 @@ REGIONAL = {
                "Geoportale Nazionale (MASE) orthophoto 2012", (35.40, 6.60, 47.10, 18.60), "export", False),
     # Poland (a user's tip, 2026-10-22, from MapNG's developer): GUGiK's national orthophoto (Geoportal, ~25 cm; free
     # to download and use for any purpose, no access constraints in its INSPIRE record); its WMS has no Web Mercator
+    # Geoportal reprojects its national LKS-94 cache through export. Request only the photograph layer:
+    # the default layer set also draws the survey-date overlay. Verified in all three LT cities, 2026-11-25.
+    "lithuania": ("https://www.geoportal.lt/mapproxy/nzt_ort10lt_recent/MapServer/export?layers=show:8&" + ARCGIS_EXPORT,
+                  "ORT10LT (2022-2026) (c) Nacionalinė žemės tarnyba prie Aplinkos ministerijos; SSVA / geoportal.lt "
+                  "(CC BY 4.0), data changed", (53.89, 20.90, 56.45, 26.85), "export", False),
     "poland": ("https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution?LAYERS=Raster&" + WMS_4326,
                "Ortofotomapa (c) GUGiK, geoportal.gov.pl", (49.00, 14.12, 54.84, 24.15), "export", False),
     "czechia": ("https://ags.cuzk.gov.cz/arcgis1/rest/services/ORTOFOTO_WM/MapServer/tile/{z}/{y}/{x}",

@@ -78,6 +78,7 @@ ELEVATION = {
              "(Natural Resources Canada, HRDEM - CanElevation Series)",
     "hkdtm": "2020 LiDAR terrain model of the Civil Engineering and Development Department, (c) Government of the Hong "
              "Kong SAR, from DATA.GOV.HK and the CSDI Portal, data changed",
+    "ltdtm": __import__("ltdtm").ATTRIBUTION,
     polardem.SOURCE: "Produced using Copernicus WorldDEM-30 (c) DLR e.V. 2010-2014 and (c) Airbus Defence and Space GmbH "
                      "2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
 }
@@ -98,6 +99,7 @@ SHORT = {
     "img:flanders": "Digitaal Vlaanderen", "img:de_bayern": "LDBV Bayern", "img:de_nrw": "Geobasis NRW",
     "img:de_bw": "LGL BW", "img:de_nds": "LGLN", "img:de_berlin": "Geoportal Berlin", "img:de_hessen": "HVBG Hessen",
     "img:japan": "GSI Japan", "img:hongkong": "LandsD Hong Kong",
+    "img:lithuania": "ORT10LT / NŽT / SSVA",
     "img:au_nsw": "Spatial Services NSW", "img:au_tas": "theLIST Tasmania",
     "img:ontario": "Ontario GEO", "img:bcortho": "LidarBC photos (OGL-BC)",
     "img:bngs2": "ESA WorldCover Sentinel-2 2021 (Copernicus)",
@@ -105,6 +107,7 @@ SHORT = {
     f"dem:{polardem.SOURCE}": "Copernicus DEM (DLR, Airbus)",
     "dem:hrdem": "NRCan HRDEM (OGL-Canada)", "dem:lidarbc": "LidarBC (OGL-BC)",
     "dem:hkdtm": "HK Gov CEDD LiDAR (DATA.GOV.HK, CSDI)",
+    "dem:ltdtm": "GDR50LT / NŽT (5 m)",
     WEATHER_ID: "Open-Meteo",
 }
 # Every other source that built what is near the player (the user, 2026-10-18: "show all sources", not only those
@@ -402,6 +405,8 @@ def tile_sources(frame, bbox, dem, zoom, used):
                 ids.add("dem:lidarbc")
             if k in getattr(dem, "hkdtm_served", ()):
                 ids.add("dem:hkdtm")
+            if k in getattr(dem, "ltdtm_served", ()):
+                ids.add("dem:ltdtm")
     if callable(getattr(dem, "polar", None)) and polar_covered(frame, bbox, dem.polar()):
         ids.add(f"dem:{polardem.SOURCE}")
     return frozenset(ids)
